@@ -83,12 +83,17 @@ test('the preview bar holds a phase, moves focus both ways, and leaves the page 
   const exit = page.getByRole('button', { name: 'Leave preview' });
   const hero = page.getByRole('heading', { level: 1 });
 
+  // Measure the position we are leaving, not a later in-preview scroll tick.
+  await toggle.scrollIntoViewIfNeeded();
+  await waitForDrawIdle(page);
+  const reading = await waitForScrollSettle(page);
+
   await toggle.click();
   await expect(bar).toBeVisible();
   await expect(exit).toBeFocused();
   await expect(hero).toBeHidden();
-  expect(await page.evaluate(() => getComputedStyle(document.body).overflow)).toBe('hidden');
-  const reading = await waitForScrollSettle(page);
+  await page.mouse.wheel(0, 600);
+  expect(await waitForScrollSettle(page)).toBe(reading);
 
   // In preview the page is out of sight, so a screenshot of the top of the
   // viewport is the shader and nothing else: real composited pixels.
@@ -119,13 +124,12 @@ test('the preview bar holds a phase, moves focus both ways, and leaves the page 
   await expect(toggle).toBeFocused();
   await expect(hero).toBeVisible();
   await expect(page.locator('canvas')).toHaveCount(1);
-  await expect
-    .poll(() => page.evaluate(() => getComputedStyle(document.body).overflow))
-    .not.toBe('hidden');
 
   const after = await waitForScrollSettle(page);
   expect(
     Math.abs(after - reading),
     `entering and leaving preview should not move the page (${reading} -> ${after})`,
   ).toBeLessThanOrEqual(2);
+  await page.mouse.wheel(0, 300);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(after);
 });
