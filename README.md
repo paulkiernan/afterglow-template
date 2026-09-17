@@ -42,11 +42,11 @@ npm run preview
 
 The `@paulkiernan/afterglow` package (version 1.0.0) is built from this repository; publishing a GitHub release runs a workflow that publishes it to GitHub Packages and attaches the packed tarball to the release. The package is ESM only and ships compiled output with its GLSL bundled in, so consuming it does not need any special raw-import support in your bundler. React and `three` are peer dependencies (`react` ^19.0.0 and `three` ^0.185.1), so install them alongside it.
 
-GitHub Packages does not inherit repository visibility: a released package stays private to its owner until access is granted, so installers outside the owner account need either access to the package or the release tarball below.
+The [published package is public](https://github.com/users/paulkiernan/packages/npm/package/afterglow). GitHub's npm registry still requires authentication; the release tarball below installs without a registry token.
 
 ### From GitHub Packages
 
-GitHub Packages serves from `npm.pkg.github.com` and requires an authenticated token even for a public package. If you have access to the package, authenticate with an interactive login, which stores the credential in your user-level config:
+GitHub Packages serves from `npm.pkg.github.com` and requires an authenticated token even for a public package. Authenticate with an interactive login, which stores the credential in your user-level config:
 
 ```bash
 npm login --scope=@paulkiernan --auth-type=legacy --registry=https://npm.pkg.github.com
@@ -70,7 +70,7 @@ Never commit a real token; both forms above keep it out of the repository.
 
 ### From the release tarball
 
-The release workflow attaches the packed tarball to the GitHub release, and that asset downloads anonymously, so it is the way in when you do not have GitHub Packages access:
+The release workflow attaches the packed tarball to the GitHub release. It downloads anonymously and needs no GitHub Packages registry configuration:
 
 ```bash
 npm install https://github.com/paulkiernan/afterglow-template/releases/download/v1.0.0/paulkiernan-afterglow-1.0.0.tgz
