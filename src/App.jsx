@@ -67,9 +67,14 @@ export default function App() {
   // of sight and out of the tab order, so the field has the viewport to itself.
   useEffect(() => {
     if (!preview) return undefined;
+    const { scrollX, scrollY } = window;
+    const previousOverflow = document.body.style.overflow;
+    // Cancel a pending smooth scroll before locking the preview in place.
+    window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
     document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
+      window.scrollTo({ left: scrollX, top: scrollY, behavior: 'instant' });
     };
   }, [preview]);
 

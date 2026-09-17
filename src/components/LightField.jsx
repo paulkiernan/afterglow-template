@@ -393,17 +393,20 @@ export default function LightField({
         return;
       }
       const now = performance.now();
-      if (animateTime) clock += (Math.min(now - lastFrame, 100) / 1000) * motionNow;
+      const elapsedMs = now - lastFrame;
+      if (animateTime) clock += (Math.min(elapsedMs, 100) / 1000) * motionNow;
       lastFrame = now;
       uniforms.uTime.value = clock;
 
       // Scroll drives the day, lerped here so the sky never jumps even when
       // the browser teleports (anchor links, page-down).
+      // Preserve the 60 Hz easing rates even when frames arrive slowly.
+      const elapsedFrames = elapsedMs / (1000 / 60);
       const step = targetPhase - uniforms.uPhase.value;
-      uniforms.uPhase.value += step * 0.06;
+      uniforms.uPhase.value += step * (1 - Math.pow(1 - 0.06, elapsedFrames));
       let settled = Math.abs(step) < 0.0006;
 
-      uniforms.uPointer.value.lerp(pointerTarget, 0.04);
+      uniforms.uPointer.value.lerp(pointerTarget, 1 - Math.pow(1 - 0.04, elapsedFrames));
       if (uniforms.uPointer.value.distanceToSquared(pointerTarget) > 1e-7) settled = false;
 
       if (!renderNow()) return;
