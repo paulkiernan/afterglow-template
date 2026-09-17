@@ -1,0 +1,69 @@
+name: Publish
+
+# Publishing a GitHub release gates the full check suite, verifies the tag
+# against package.json, then publishes one packed tarball to GitHub Packages
+# and attaches that same tarball to the release for anonymous consumers.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @paulkiernan/afterglow
+    if: github.repository == 'paulkiernan/afterglow-template'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # attach the tarball to the triggering release
+      packages: write # publish to GitHub Packages
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+          registry-url: https://npm.pkg.github.com
+          scope: '@paulkiernan'
+
+      - name: Verify the release tag matches the package version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$RELEASE_TAG" != "$version" ] && [ "$RELEASE_TAG" != "v$version" ]; then
+            echo "::error::Release tag '$RELEASE_TAG' does not match package version '$version'."
+            exit 1
+          fi
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run checks
+        run: npm run check
+
+
+      - name: Pack the built package
+        id: pack
+        run: |
+          tarball="$(npm pack --ignore-scripts --json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")"
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+
+      - name: Publish the tarball to GitHub Packages
+        run: npm publish --ignore-scripts "./${{ steps.pack.outputs.tarball }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Attach the tarball to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" "./${{ steps.pack.outputs.tarball }}"

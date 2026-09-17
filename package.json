@@ -1,0 +1,77 @@
+{
+  "name": "@paulkiernan/afterglow",
+  "version": "1.0.0",
+  "description": "A shader-first React starter with configurable light fields, paper surfaces, and expressive typography.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulkiernan/afterglow-template.git"
+  },
+  "homepage": "https://github.com/paulkiernan/afterglow-template#readme",
+  "bugs": {
+    "url": "https://github.com/paulkiernan/afterglow-template/issues"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./fonts.css": "./lib/fonts.css",
+    "./styles.css": "./lib/styles.css",
+    "./shaders/*": "./lib/shaders/*"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:lib": "vite build --config vite.lib.config.js && node scripts/build-assets.mjs",
+    "lint": "eslint . --max-warnings=0",
+    "test": "playwright test",
+    "test:package": "npm run build:lib && node scripts/test-package.mjs",
+    "check": "npm run lint && npm test && npm run build && npm run test:package",
+    "prepack": "npm run build:lib"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "three": "^0.185.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/karla": "5.3.0",
+    "@fontsource/stick-no-bills": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@types/react": "19.2.14",
+    "@vitejs/plugin-react": "6.1.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.11.0",
+    "pngjs": "7.0.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "three": "0.185.1",
+    "typescript": "5.9.3",
+    "vite": "8.2.2"
+  }
+}

@@ -1,0 +1,86 @@
+name: CI
+
+# Pull requests and pushes to main verify the repository. A main push (or a
+# manual dispatch, useful after Page settings change) additionally publishes
+# the built demo to GitHub Pages.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, test, build, package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run checks
+        run: npm run check
+
+      - name: Upload demo build
+        if: github.ref == 'refs/heads/main' && github.repository == 'paulkiernan/afterglow-template'
+        uses: actions/upload-artifact@v7
+        with:
+          name: demo-dist
+          path: dist
+          if-no-files-found: error
+
+      - name: Upload Playwright failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-failure-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    name: Deploy demo to GitHub Pages
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.repository == 'paulkiernan/afterglow-template'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download the built demo
+        uses: actions/download-artifact@v8
+        with:
+          name: demo-dist
+          path: dist
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
